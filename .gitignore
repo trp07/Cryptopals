@@ -1,10 +1,6 @@
 # Ignore all files
-*
-
-# Only allow these files:
-!.gitignore
-!*.c
-!*.h
-!*.md
-!*.txt
+Set1/1_hex_to_base64
+Set1/2_fixed_xor
+Set1/3_single_xor
+Set1/4_detect_single_xor
 
