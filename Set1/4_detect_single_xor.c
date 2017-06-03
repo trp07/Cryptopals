@@ -5,7 +5,7 @@ https://cryptopals.com/sets/1/challenges/4
 One of the 60-character strings in the file "4_input.txt" has been encrypted
 by single-character XOR.  Find it.
 
-Compile: gcc set1.c linked_list.c 4_detect_single_xor.c -o 4_detect_single_xor
+Compile: gcc set1.c 4_detect_single_xor.c -o 4_detect_single_xor
 
 */
 
@@ -13,7 +13,7 @@ Compile: gcc set1.c linked_list.c 4_detect_single_xor.c -o 4_detect_single_xor
 #include <stdlib.h>
 #include <string.h>
 #include "set1.h"
-#include "linked_list.h"
+
 
 int main(void)
 {

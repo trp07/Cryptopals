@@ -5,7 +5,7 @@ https://cryptopals.com/sets/1/challenges/3
 input has been XOR'd against a single character. Find the key, decrypt the
 message.
 
-Compile: gcc set1.c linked_list.c 3_single_xor.c -o 3_single_xor
+Compile: gcc set1.c 3_single_xor.c -o 3_single_xor
 
 */
 
@@ -13,10 +13,8 @@ Compile: gcc set1.c linked_list.c 3_single_xor.c -o 3_single_xor
 #include <stdlib.h>
 #include <string.h>
 #include "set1.h"
-#include "linked_list.h"
 
 
-/******************************************************************************/
 int main(void)
 {
     char *input = "1b37373331363f78151b7f2b783431333d78397828"
