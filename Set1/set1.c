@@ -13,6 +13,7 @@ See also:
 #include <ctype.h>
 #include <math.h>
 #include "set1.h"
+#include "linked_list.h"
 
 /*******************************************************************************
 * GLOBAL VARs
@@ -238,9 +239,9 @@ void analyzeCandidate(Candidate *can)
         can->score member.
 
         VOW_CONS_RATIO = 0.382 was determined by using the English language
-        frequency analysis graph from "Introduction to Modern Cyptography", 
-        2nd Ed., by Jonathan Katz, page 11.  
-        Adding all the vowel percentages shows that vowels comprise 
+        frequency analysis graph from "Introduction to Modern Cyptography",
+        2nd Ed., by Jonathan Katz, page 11.
+        Adding all the vowel percentages shows that vowels comprise
         roughly 38.2% of letters in English text, on average.
 
         This is not the most robust way to score and may be improved over time,
@@ -276,6 +277,88 @@ void analyzeCandidate(Candidate *can)
     can->score  = can->letter_length_ratio;
     can->score += can->plain_length;
     can->score *= (1 - fabs(VOW_CONS_RATIO - can->vowel_cons_ratio));
+}
+
+/*****************************************************************************/
+char *findHighestScore(LinkedList *list)
+{
+    /* function that will return the candidate's plaintext with the highest
+       score.     */
+
+    double score = 0;
+    Candidate *tmp, *can;
+
+    list->current = list->head;
+    while (list->current != NULL) {
+        tmp = (Candidate *) list->current->data;
+
+        if (tmp->score > score) {
+            can = tmp;
+            score = can->score;
+            //printf("score: %f\n", score);
+        }
+
+        list->current = list->current->next;
+    }
+
+    char *result = (char *) can->plaintext;
+    return result;
+}
+
+/*****************************************************************************/
+char *singleXOR_iterate(char *input)
+{
+    /* Given a string encrypted via the single-xor method, functions iterates
+       through all possible byte values as the XOR key. Function creates a
+       linked-list of all "candidates" and does a makeshift frequency analysis
+       to score each decrypted string.  Returns the 'best' candidate.
+
+       :INPUT an encrypted string
+
+       :RETURNS the decrypted string
+    */
+
+    int INPUT_LEN = strlen(input);
+    int *INPUT_ARR = (int *) malloc(sizeof(int) * (INPUT_LEN / 2));
+    int index = 0;
+
+    /* create an array of numerical representation of the input string */
+    for (int i = 0; i < INPUT_LEN; i += 2) {
+        INPUT_ARR[index++] = getHexInt(input[i]) * 16 + getHexInt(input[i + 1]);
+    }
+
+    LinkedList *list = ListInit();
+
+    char byte;     /* xor string against this */
+    int num;
+
+    for (int i = 0; i < 128; i++) { /* iterate through ASCII char 0-127  */
+        byte = (char) i;
+        Candidate *can = createCandidateStruct(input);  // set1.c
+        index = 0;
+
+        for (int j = 0; j < INPUT_LEN / 2; j++) { /* iterate through INPUT_ARR */
+            num = INPUT_ARR[j];
+            num ^= byte;
+            can->plaintext[index++] = (char) num;
+        }
+
+        /* add Candidate to LinkedList (see linked_list.c) */
+        insert_node(list, (void *) can);
+
+        /* analyze plaintext and 'score' it */
+        analyzeCandidate(can);
+    }
+
+    char *result = (char *) malloc(sizeof(char) * INPUT_LEN);
+    memset(result, '\0', INPUT_LEN);
+    strcpy(result, findHighestScore(list));
+
+    freeLinkedList(list);
+    free(INPUT_ARR);
+    INPUT_ARR = NULL;
+
+    return result;
 }
 
 /*****************************************************************************/

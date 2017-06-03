@@ -17,7 +17,7 @@ LinkedList *ListInit(void)
 
         :INPUT is nothing
 
-        :RETURNS the LinkedList data structure  
+        :RETURNS the LinkedList data structure
     */
 
     LinkedList *list = (LinkedList *) malloc(sizeof(LinkedList));
@@ -38,7 +38,7 @@ void insert_node(LinkedList *list, void *item)
         :INPUT is a LinkedList already initialized, as well as the data item
         the list will track, such as a Candidate struct (see set1.c)
 
-        :RETURNS nothing    
+        :RETURNS nothing
     */
 
     Node *node = (Node *) malloc(sizeof(Node));     // create a node struct
@@ -62,10 +62,10 @@ void insert_node(LinkedList *list, void *item)
 /******************************************************************************/
 void freeLinkedList(LinkedList *list)
 {
-    /*  Frees all members in the linked list to avoid memory leaks  
-        
+    /*  Frees all members in the linked list to avoid memory leaks
+
         :INPUT a LinkedList that was previously used.  This program assumes
-        the data element in the Node struct was a "Candidate" struct from 
+        the data element in the Node struct was a "Candidate" struct from
         set1.h
 
         :RETURNS nothing
@@ -103,3 +103,4 @@ void freeLinkedList(LinkedList *list)
 }
 
 /******************************************************************************/
+
