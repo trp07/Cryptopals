@@ -7,7 +7,7 @@ Convert hex to base64
 Good reference on Base64:
 https://en.wikipedia.org/wiki/Base64
 
-Compile: gcc set1.c 1-1_hex_to_base64.c -o 1-1_hex_to_base64
+Compile: gcc set1.c 1_hex_to_base64.c -o 1_hex_to_base64
 */
 
 #include <stdio.h>

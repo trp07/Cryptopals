@@ -6,7 +6,7 @@ Fixed XOR:
 Write a function that takes two equal-length buffers and produces their
 XOR combination.
 
-Compile: gcc set1.c 1-2_fixed_xor.c -o 1-2_fixed_xor
+Compile: gcc set1.c 2_fixed_xor.c -o 2_fixed_xor
 
 */
 
