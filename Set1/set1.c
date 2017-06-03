@@ -3,8 +3,6 @@ CyptoPals - Set 1
 
 Functions created while completing challenges for Set 1
 
-See also:
-    linked_list.h / linked_list.c
 */
 
 #include <stdio.h>
@@ -13,7 +11,6 @@ See also:
 #include <ctype.h>
 #include <math.h>
 #include "set1.h"
-#include "linked_list.h"
 
 /*******************************************************************************
 * GLOBAL VARs
@@ -29,7 +26,7 @@ char base64_vals[64] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
 
 
 /*******************************************************************************
-* FUNCTIONS
+* FUNCTIONS - CRYPTOGRAPHY
 *******************************************************************************/
 
 
@@ -66,7 +63,7 @@ char getHexChar(int num)
 {
     /* Utility function to convert int numbers to their hex char equivalents.
 
-       :INPUT is a hex digits, then converts it to the ASCII char equivalent.
+       :INPUT is a hex digit, then converts it to the ASCII char equivalent.
 
        :RETURN the hexadecimal value as an integer, i.e. 0xd = 13
     */
@@ -91,6 +88,31 @@ char getHexChar(int num)
     }
 }
 
+
+/*****************************************************************************/
+char *string_to_hexString(char *input)
+{
+    /*  Given a string, returns the same string but with hex character
+        equivalents
+    */
+
+    int a, b, index = 0;
+    char *result = (char *) malloc(sizeof(char) * strlen(input) * 2 + 1);
+
+    for (int i = 0; i < strlen(input); i++) {
+        if ((int) input[i] <= 15) {
+            result[index++] = '0';
+            result[index++] = getHexChar(input[i]);
+        } else {
+            a = (int) input[i] / 16;
+            b = (int) input[i] % 16;
+            result[index++] = getHexChar(a);
+            result[index++] = getHexChar(b);
+        }
+    }
+
+    return result;
+}
 
 /*****************************************************************************/
 char *hexString_to_base64String(char *input)
@@ -366,3 +388,122 @@ char *singleXOR_iterate(char *input)
 }
 
 /*****************************************************************************/
+char *encryptXor(char *plaintext, char *key)
+{
+    /*  Given a plaintext string and a key, this function returns the cipher
+        text that results from reapeated xor encryption.
+    */
+
+    char *result;
+    char *cipher = (char *) malloc(sizeof(char) * strlen(plaintext) + 1);
+
+
+    for (int i = 0; i < strlen(plaintext); i++) {
+         cipher[i] = plaintext[i] ^ key[i % strlen(key)];
+    }
+
+    result = string_to_hexString(cipher);
+
+    free(cipher);
+    cipher = NULL;
+    return result;
+}
+
+
+
+/*******************************************************************************
+* FUNCTIONS - LINKED LIST UTILITIES
+*******************************************************************************/
+
+LinkedList *ListInit(void)
+{
+    /*  Creates the data structure to manage the linked list
+
+        :INPUT is nothing
+
+        :RETURNS the LinkedList data structure
+    */
+
+    LinkedList *list = (LinkedList *) malloc(sizeof(LinkedList));
+    list->head = NULL;
+    list->tail = NULL;
+    list->current = NULL;
+    list->size = 0;
+
+    return list;
+}
+
+
+/******************************************************************************/
+void insert_node(LinkedList *list, void *item)
+{
+    /*  Inserts a data item into the list
+
+        :INPUT is a LinkedList already initialized, as well as the data item
+        the list will track, such as a Candidate struct (see set1.c)
+
+        :RETURNS nothing
+    */
+
+    Node *node = (Node *) malloc(sizeof(Node));     // create a node struct
+    node->data = item;      // point it at the Candidate struct
+
+    if (list->size == 0) {  // list is empty
+        node->next = NULL;
+        list->tail = node;
+    } else {    // node is not empty... insert at head
+        node->next = list->head;
+    }
+
+    list->head = node;
+    list->current = node;
+    list->size++;
+
+    return;
+}
+
+
+/******************************************************************************/
+void freeLinkedList(LinkedList *list)
+{
+    /*  Frees all members in the linked list to avoid memory leaks
+
+        :INPUT a LinkedList that was previously used.  This program assumes
+        the data element in the Node struct was a "Candidate" struct from
+        set1.h
+
+        :RETURNS nothing
+    */
+
+    Candidate *can;
+    Node *node;
+
+    //printf("LinkedList current size: %u\n", list->size);
+
+    list->current = list->head;     // point to head node
+    while (list->current != NULL) {   // iterate through list
+        node = list->current;
+        can = (Candidate *) node->data;
+
+        list->current = list->current->next;
+
+        free(can->plaintext);
+        free(can);
+        free(node);
+
+        list->size--;
+        //printf("LinkedList current size: %u\n", list->size);
+
+        can->plaintext = NULL;
+        can = NULL;
+        node = NULL;
+    }
+
+    free(list);
+    list = NULL;
+
+    //printf("LinkedList 100%% free!\n");
+    return;
+}
+
+/******************************************************************************/
