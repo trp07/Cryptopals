@@ -219,8 +219,8 @@ Candidate *createCandidateStruct(char *input)
     Candidate *can = (Candidate *) malloc(sizeof(Candidate));
     can->ciphertext = input;
     can->plaintext = (char *) malloc(sizeof(char) * (strlen(input) / 2) + 1);
-    can->plain_length = can->num_vowels = can->num_consanants = 0;
-    can->vowel_cons_ratio = can->letter_length_ratio = can->score = 0;
+    can->plain_length = 0;
+    can->score = 0.0;
     return can;
 }
 
@@ -231,53 +231,57 @@ void analyzeCandidate(Candidate *can)
         XOR'ing the given ciphertext with a random byte value, assuming
         single-XOR encryption.
 
-        Analysis by doing a makeshift frequency analysis of the English
-        language, such as percentage of letters as a ratio to the string length,
-        number of vowels present, etc.
-
         Each score is calculated and stored in the Candidate struct's
         can->score member.
+    */
+    can->score = scorePlaintext(can->plaintext);
+}
 
-        VOW_CONS_RATIO = 0.382 was determined by using the English language
-        frequency analysis graph from "Introduction to Modern Cyptography",
-        2nd Ed., by Jonathan Katz, page 11.
-        Adding all the vowel percentages shows that vowels comprise
-        roughly 38.2% of letters in English text, on average.
 
-        This is not the most robust way to score and may be improved over time,
-        but consider this a first draft.
+/*****************************************************************************/
+int scorePlaintext(char *plaintext)
+{
+    /*  Given a plaintext string, it does a makeshift frequency analysis of the
+        English language by adding a specified value to a 'score' variable
+        based on what the current character being analyzed is.
+
+        Technique borrowed from:
+        https://github.com/talshorer/cryptopals/blob/master/set1/single_byte_xor.c
+
+        :INPUT is a plaintext string
+
+        :RETURNS an integer indicating its score.  The higher the better.
     */
 
-    double VOW_CONS_RATIO = 0.382;
 
-    can->plain_length = strlen(can->plaintext);
+    int plain_len = strlen(plaintext);
+    int score = 0;
 
-    for (int i = 0; i < can->plain_length; i++) {
-        if (isalpha(can->plaintext[i])) {
-            switch(can->plaintext[i]) {
-                case 'a'|'A'|'e'|'E'|'i'|'O'|'o'|'U'|'u' :
-                    can->num_vowels += 1; break;
-                default:
-                    can->num_consanants += 1;
-            }
+    for (int i = 0; i < plain_len; i++) {
+        switch(plaintext[i]) {
+            case 'a'...'z':     /* fallthrough */
+            case 'A'...'Z':     /* fallthrough */
+                score += 4; break;
+            case '0'...'9':     /* fallthrough */
+            case '\'':          /* fallthrough */
+            case '\n':          /* fallthrough */
+            case '\t':          /* fallthrough */
+            case ',':           /* fallthrough */
+            case '.':           /* fallthrough */
+            case ' ':
+                score += 2; break;
+            case '!':           /* fallthrough */
+            case '?':           /* fallthrough */
+            case '-':           /* fallthrough */
+            case '/':
+                score += 1; break;
         }
     }
 
-    /* to prevent divide-by-zero's */
-    if (can->plain_length == 0 || can->num_consanants == 0) {
-        can->score = 0.0;
-        return;
-    }
-
-    can->vowel_cons_ratio = (double) can->num_vowels / can->num_consanants;
-    can->letter_length_ratio = ((double) can->num_vowels +
-                                (double) can->num_consanants) / can->plain_length;
-
-    /* create score -- NEEDS tweaking  */
-    can->score  = can->letter_length_ratio;
-    can->score += can->plain_length;
-    can->score *= (1 - fabs(VOW_CONS_RATIO - can->vowel_cons_ratio));
+    return score;
 }
+
+
 
 /*****************************************************************************/
 char *findHighestScore(LinkedList *list)
@@ -332,7 +336,7 @@ char *singleXOR_iterate(char *input)
     char byte;     /* xor string against this */
     int num;
 
-    for (int i = 0; i < 128; i++) { /* iterate through ASCII char 0-127  */
+    for (int i = 0; i < 256; i++) { /* iterate through 1-byte 0-255  */
         byte = (char) i;
         Candidate *can = createCandidateStruct(input);  // set1.c
         index = 0;

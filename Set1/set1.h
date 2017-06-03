@@ -25,10 +25,6 @@ typedef struct _candidate {
     char    *ciphertext;
     char    *plaintext;
     unsigned long     plain_length;
-    unsigned long     num_vowels;
-    unsigned long     num_consanants;
-    double  vowel_cons_ratio;
-    double  letter_length_ratio;
     double  score;
 } Candidate;
 
@@ -43,6 +39,7 @@ char *hexString_to_base64String(char *input);
 char *fixed_xor(char *buf1, char *buf2);
 Candidate *createCandidateStruct(char *input);
 void analyzeCandidate(Candidate *can);
+int scorePlaintext(char *plaintext);
 char *findHighestScore(LinkedList *list);
 char *singleXOR_iterate(char *input);
 
