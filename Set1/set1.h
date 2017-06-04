@@ -44,7 +44,13 @@ typedef struct _list {
 
 /*******************************************************************************
 * FUNCTIONS
+*   listed in order as they appear in set1.c
 *******************************************************************************/
+
+/* Linked-List functions */
+LinkedList *ListInit(void);
+void insert_node(LinkedList *list, void *item);
+void freeLinkedList(LinkedList *list);
 
 /* Cryptography functions */
 int getHexInt(char c);
@@ -58,12 +64,9 @@ int scorePlaintext(char *plaintext);
 char *findHighestScore(LinkedList *list);
 char *singleXOR_iterate(char *input);
 char *encryptXor(char *plaintext, char *key);
+int hammingDist(char *str1, char *str2);
 
 
-/* Linked-List functions */
-LinkedList *ListInit(void);
-void insert_node(LinkedList *list, void *item);
-void freeLinkedList(LinkedList *list);
 
 
 

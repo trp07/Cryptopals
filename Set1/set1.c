@@ -25,6 +25,106 @@ char base64_vals[64] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
                         '3', '4', '5', '6', '7', '8', '9', '+', '\\'};
 
 
+
+
+/*******************************************************************************
+* FUNCTIONS - LINKED LIST UTILITIES
+*******************************************************************************/
+
+LinkedList *ListInit(void)
+{
+    /*  Creates the data structure to manage the linked list
+
+        :INPUT is nothing
+
+        :RETURNS the LinkedList data structure
+    */
+
+    LinkedList *list = (LinkedList *) malloc(sizeof(LinkedList));
+    list->head = NULL;
+    list->tail = NULL;
+    list->current = NULL;
+    list->size = 0;
+
+    return list;
+}
+
+
+/******************************************************************************/
+void insert_node(LinkedList *list, void *item)
+{
+    /*  Inserts a data item into the list
+
+        :INPUT is a LinkedList already initialized, as well as the data item
+        the list will track, such as a Candidate struct (see set1.c)
+
+        :RETURNS nothing
+    */
+
+    Node *node = (Node *) malloc(sizeof(Node));     // create a node struct
+    node->data = item;      // point it at the Candidate struct
+
+    if (list->size == 0) {  // list is empty
+        node->next = NULL;
+        list->tail = node;
+    } else {    // node is not empty... insert at head
+        node->next = list->head;
+    }
+
+    list->head = node;
+    list->current = node;
+    list->size++;
+
+    return;
+}
+
+
+/******************************************************************************/
+void freeLinkedList(LinkedList *list)
+{
+    /*  Frees all members in the linked list to avoid memory leaks
+
+        :INPUT a LinkedList that was previously used.  This program assumes
+        the data element in the Node struct was a "Candidate" struct from
+        set1.h
+
+        :RETURNS nothing
+    */
+
+    Candidate *can;
+    Node *node;
+
+    //printf("LinkedList current size: %u\n", list->size);
+
+    list->current = list->head;     // point to head node
+    while (list->current != NULL) {   // iterate through list
+        node = list->current;
+        can = (Candidate *) node->data;
+
+        list->current = list->current->next;
+
+        free(can->plaintext);
+        free(can);
+        free(node);
+
+        list->size--;
+        //printf("LinkedList current size: %u\n", list->size);
+
+        can->plaintext = NULL;
+        can = NULL;
+        node = NULL;
+    }
+
+    free(list);
+    list = NULL;
+
+    //printf("LinkedList 100%% free!\n");
+    return;
+}
+
+
+
+
 /*******************************************************************************
 * FUNCTIONS - CRYPTOGRAPHY
 *******************************************************************************/
@@ -410,100 +510,46 @@ char *encryptXor(char *plaintext, char *key)
 }
 
 
-
-/*******************************************************************************
-* FUNCTIONS - LINKED LIST UTILITIES
-*******************************************************************************/
-
-LinkedList *ListInit(void)
+/*****************************************************************************/
+int hammingDist(char *str1, char *str2)
 {
-    /*  Creates the data structure to manage the linked list
+    /*  Given two strings of equal length, it returns the hamming/edit distance
+        between each string.  Typically, the number of different characters
+        between the strings, but this will do it bit-by-bit.
 
-        :INPUT is nothing
-
-        :RETURNS the LinkedList data structure
+        RETURNS -1 on error
     */
 
-    LinkedList *list = (LinkedList *) malloc(sizeof(LinkedList));
-    list->head = NULL;
-    list->tail = NULL;
-    list->current = NULL;
-    list->size = 0;
+    if (strlen(str1) != strlen(str2))
+        return -1;
 
-    return list;
-}
+    int len = strlen(str1);
+    int hamming = 0;
+    int temp;
 
+    for (int i = 0; i < len; i++) {
+        if (str1[i] != str2[i])
+            temp = str1[i] ^ str2[i];  // find bits where they differ
 
-/******************************************************************************/
-void insert_node(LinkedList *list, void *item)
-{
-    /*  Inserts a data item into the list
-
-        :INPUT is a LinkedList already initialized, as well as the data item
-        the list will track, such as a Candidate struct (see set1.c)
-
-        :RETURNS nothing
-    */
-
-    Node *node = (Node *) malloc(sizeof(Node));     // create a node struct
-    node->data = item;      // point it at the Candidate struct
-
-    if (list->size == 0) {  // list is empty
-        node->next = NULL;
-        list->tail = node;
-    } else {    // node is not empty... insert at head
-        node->next = list->head;
+            /* find out which bits are set, indicating a difference */
+            if (temp & 1)
+                hamming++;
+            if (temp & 2)
+                hamming++;
+            if (temp & 4)
+                hamming++;
+            if (temp & 8)
+                hamming++;
+            if (temp & 16)
+                hamming++;
+            if (temp & 32)
+                hamming++;
+            if (temp & 64)
+                hamming++;
+            if (temp & 128)
+                hamming++;
     }
 
-    list->head = node;
-    list->current = node;
-    list->size++;
-
-    return;
+    return hamming;
 }
 
-
-/******************************************************************************/
-void freeLinkedList(LinkedList *list)
-{
-    /*  Frees all members in the linked list to avoid memory leaks
-
-        :INPUT a LinkedList that was previously used.  This program assumes
-        the data element in the Node struct was a "Candidate" struct from
-        set1.h
-
-        :RETURNS nothing
-    */
-
-    Candidate *can;
-    Node *node;
-
-    //printf("LinkedList current size: %u\n", list->size);
-
-    list->current = list->head;     // point to head node
-    while (list->current != NULL) {   // iterate through list
-        node = list->current;
-        can = (Candidate *) node->data;
-
-        list->current = list->current->next;
-
-        free(can->plaintext);
-        free(can);
-        free(node);
-
-        list->size--;
-        //printf("LinkedList current size: %u\n", list->size);
-
-        can->plaintext = NULL;
-        can = NULL;
-        node = NULL;
-    }
-
-    free(list);
-    list = NULL;
-
-    //printf("LinkedList 100%% free!\n");
-    return;
-}
-
-/******************************************************************************/
