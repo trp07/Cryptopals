@@ -26,6 +26,18 @@ char base64_vals[64] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
 
 
 
+/*******************************************************************************
+* FUNCTIONS - GENERAL UTILITIES
+*******************************************************************************/
+
+void errExit(char *message)
+{
+    /* error and exit function */
+
+    fprintf(stderr, "[!] %s\n", message);
+    exit(EXIT_FAILURE);
+}
+
 
 /*******************************************************************************
 * FUNCTIONS - LINKED LIST UTILITIES
@@ -298,6 +310,112 @@ char *hexString_to_base64String(char *input)
     hex = NULL;
 
     return base64String;
+}
+
+
+/*****************************************************************************/
+char *base64String_to_hexString(char *input)
+{
+    /*  This function converts a base64-encoded string to a hexadecimal
+        equivalent string.
+
+        :INPUT is a base64-encoded string
+
+        :RETURN is a hexadecimal string
+
+        *** Must use free() in the calling function to free memory allocated.
+    */
+
+    int INPUT_LEN = strlen(input);
+    int OUTPUT_LEN = (INPUT_LEN * 2) * 3 / 4; // 4 chars produce 3 ints
+    int PADDING = 0;
+
+    /* was the base64-encoded string padded? If so, modify string lengths*/
+    if (input[INPUT_LEN - 1] == '=') {
+        PADDING++;
+    }
+    if (input[INPUT_LEN - 2] == '=') {
+        PADDING++;
+    }
+    INPUT_LEN  -= PADDING;
+    OUTPUT_LEN -= (2 * PADDING);
+
+
+    /* allocate memory for output string, 'index' will be used to assign
+       hex chars at various index locations  */
+    char *output = (char *) malloc(sizeof(char) * OUTPUT_LEN + 1);
+    int index = 0;
+
+    /* vars for converting base64 to hex, 'b' denotes base64, 'h' for hex */
+    int b1, b2, b3, b4, h1, h2, h3;
+
+    /* read in 4 chars at a time to produce 3 ints for the output */
+    for (int i = 0; i < INPUT_LEN; i += 4) {
+        b1 = base64char_to_int(input[i]);
+        b2 = base64char_to_int(input[i + 1]);
+        b3 = base64char_to_int(input[i + 2]);
+        b4 = base64char_to_int(input[i + 3]);
+
+        /* validate b1-b4.  If base64char_to_int returned -1 for b1-b4,
+           then it's probably because it read the trailing '=' symbols.
+           Make them 0 for now, then truncate the output string before return */
+        if (b1 == -1 || b2 == -1 || b3 == -1 || b4 == -1)
+            if (i >= INPUT_LEN)
+                b1 = 0;
+            if (i + 1 >= INPUT_LEN)
+                b2 = 0;
+            if (i + 2 >= INPUT_LEN)
+                b3 = 0;
+            if (i + 3 >= INPUT_LEN)
+                b4 = 0;
+
+        /* convert from 6-bit base64 to 8-bit hex */
+        h1 = (b1 << 2) + (b2 >> 4);
+        h2 = ((b2 & 0xf) << 4) + ((b3 & 0x3c) >> 2);
+        h3 = ((b3 & 0x03) << 6) + b4;
+
+        /* assign hex chars to output string */
+        output[index++] = getHexChar((h1 / 16));
+        output[index++] = getHexChar((h1 % 16));
+        output[index++] = getHexChar((h2 / 16));
+        output[index++] = getHexChar((h2 % 16));
+        output[index++] = getHexChar((h3 / 16));
+        output[index++] = getHexChar((h3 % 16));
+    }
+
+    output[OUTPUT_LEN] = '\0';
+    return output;
+}
+
+/*****************************************************************************/
+int base64char_to_int(char c)
+{
+    /* Given a base64 characters, returns the integer equivalent, as shown in
+       the 'base64_vals' global var at the top.
+
+       Returns -1 on error.
+    */
+    int result;
+    switch(c) {
+        case 'A'...'Z':
+            result = ((int) c) - 65 + 0;
+            break;
+        case 'a'...'z':
+            result = ((int) c) - 97 + 26;
+            break;
+        case '0'...'9':
+            result = ((int) c) - 48 + 52;
+            break;
+        case '+':
+            result = 62;
+            break;
+        case '\\':
+            result = 63;
+            break;
+        default:
+            result = -1;
+    }
+    return result;
 }
 
 

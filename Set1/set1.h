@@ -47,6 +47,9 @@ typedef struct _list {
 *   listed in order as they appear in set1.c
 *******************************************************************************/
 
+/* General Utilities */
+void errExit(char *message);
+
 /* Linked-List functions */
 LinkedList *ListInit(void);
 void insert_node(LinkedList *list, void *item);
@@ -57,6 +60,8 @@ int getHexInt(char c);
 char getHexChar(int num);
 char *string_to_hexString(char *input);
 char *hexString_to_base64String(char *input);
+char *base64String_to_hexString(char *input);
+int base64char_to_int(char c);
 char *fixed_xor(char *buf1, char *buf2);
 Candidate *createCandidateStruct(char *input);
 void analyzeCandidate(Candidate *can);
