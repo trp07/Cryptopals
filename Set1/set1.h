@@ -70,6 +70,7 @@ char *findHighestScore(LinkedList *list);
 char *singleXOR_iterate(char *input);
 char *encryptXor(char *plaintext, char *key);
 int hammingDist(char *str1, char *str2);
+int findKeySize(char *input);
 
 
 

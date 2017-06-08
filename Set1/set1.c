@@ -671,3 +671,62 @@ int hammingDist(char *str1, char *str2)
     return hamming;
 }
 
+
+/*****************************************************************************/
+int findKeySize(char *input)
+{
+    /*  Given a hex string, find the KEYSIZE based on the hamming distance.
+
+        *  "For each KEYSIZE, take the first KEYSIZE worth of bytes, and the
+        second KEYSIZE worth of bytes, and find the edit distance between them.
+        Normalize this result by dividing by KEYSIZE."
+
+        * "The KEYSIZE with the smallest normalized edit distance is probably
+        the key. You could proceed perhaps with the smallest 2-3 KEYSIZE
+        values. Or take 4 KEYSIZE blocks instead of 2 and average the distances."
+    */
+
+    int MAX_SIZE = 41;      /* max keysize that will be checked */
+    int KEYSIZE, ham12, ham34;
+    double ham_avg, ham_min = 1000; /* set ham_min arbitrarily high at first */
+
+    char *block1, *block2, *block3, *block4;
+    block1 = (char *) malloc(sizeof(char) * MAX_SIZE + 1);
+    block2 = (char *) malloc(sizeof(char) * MAX_SIZE + 1);
+    block3 = (char *) malloc(sizeof(char) * MAX_SIZE + 1);
+    block4 = (char *) malloc(sizeof(char) * MAX_SIZE + 1);
+
+    /* try keysizes from 2-40 */
+    for (int i = 2; i < 41; i++) {
+
+        /* grab a slice of the input string */
+        for (int j = 0; j < i; j++) {
+            block1[j] = input[0 * i + j];
+            block2[j] = input[1 * i + j];
+            block3[j] = input[2 * i + j];
+            block4[j] = input[3 * i + j];
+        }
+
+        /* null-terminate the blocks */
+        block1[i] = block2[i] = block3[i] = block4[i] = '\0';
+
+        /* find hamming distances of each block and get normalized-average */
+        ham12 = hammingDist(block1, block2);
+        ham34 = hammingDist(block3, block4);
+        ham_avg = (double) (ham12 + ham34) / (2 * i);
+
+        if (ham_avg < ham_min) {
+            ham_min = ham_avg;
+            KEYSIZE = i;
+        }
+    }
+
+    /* free memory and return */
+    free(block1);
+    free(block2);
+    free(block3);
+    free(block4);
+    block1 = block2 = block3 = block4 = NULL;
+
+    return KEYSIZE;
+}
