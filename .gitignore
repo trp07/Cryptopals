@@ -6,5 +6,5 @@ Set1/4_detect_single_xor
 Set1/5_repeating_xor
 Set1/hamtest.c
 Set1/hamtest
-Set1/base64hexTest.c
-Set1/base64hexTest
+Set1/b64hexTest.c
+Set1/b64hexTest
