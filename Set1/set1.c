@@ -594,36 +594,37 @@ void repeatedXOR_iterate(char *ciphertext, int keysize)
 
     /* how big are each block?  */
     int cipherlen = strlen(ciphertext);
-    int remainder = cipherlen % keysize;
-    int blocklen = cipherlen / keysize;
+    int remainder = (cipherlen % keysize) / 2;
+    int blocklen = cipherlen / keysize / 2 + 1;
 
     /* for hex string, each two string digits equate to one plain char */
-    char *plaintext = (char *) malloc((sizeof(char) * cipherlen) / 2 + 1);
+    char *plaintext = (char *) malloc(sizeof(char) * cipherlen + 1);
     int index;
+
+    char *block   = (char *) malloc(sizeof(char) * blocklen * 2 + 2 + 1);
+    char *partial;
 
     for (int i = 0; i < keysize; i++) {
         index = 0;
-        char *block   = (char *) malloc(sizeof(char) * blocklen * 2 + 2 + 1);
-        char *partial = (char *) malloc(sizeof(char) * blocklen * 2 + 2 + 1);
 
         /* break ciphertext into blocks stepping every keysize-num chars */
-        for (int j = 0; j < (2 * blocklen); j += 2) {
-            block[j]   = ciphertext[j / 2 * keysize + i];
-            block[j+1] = ciphertext[j / 2 * keysize + i + 1];
+        for (int j = 0; j <= (2 * blocklen); j += 2) {
+            block[j]   = ciphertext[j*keysize+2*i];
+            block[j+1] = ciphertext[j*keysize+2*i+1];
         }
 
         /* if cipherlen % keysize != 0, then add remaining chars */
         if (remainder != 0 && i < remainder) {
-            block[2 * blocklen]     = ciphertext[blocklen * keysize + i];
-            block[2 * blocklen + 1] = ciphertext[blocklen * keysize + i + 1];
+            block[2*blocklen]   = ciphertext[blocklen*keysize+2*i];
+            block[2*blocklen+1] = ciphertext[blocklen*keysize+2*i+1];
         } else {
-            block[2 * blocklen]     = '\0';
-            block[2 * blocklen + 1] = '\0';
+            block[2*blocklen]   = '\0';
+            block[2*blocklen+1] = '\0';
         }
 
         /* null-terminate the block */
-        block[2 * blocklen + 2] = '\0';
-        //printf("block[%d] = %s\n", i, block);
+        block[2*blocklen+2] = '\0';
+        block[2*blocklen+3] = '\0';
 
         /* call singleXOR_iterate on each block */
         partial = singleXOR_iterate(block);
@@ -636,13 +637,13 @@ void repeatedXOR_iterate(char *ciphertext, int keysize)
                 index = cipherlen;
         }
 
-        /* reap block resources */
-        free(block);
         free(partial);
-        block = partial = NULL;
+        partial = NULL;
     }
 
     printf("%s\n", plaintext);
+    free(block);
+    block = NULL;
     free(plaintext);
     plaintext = NULL;
 }
