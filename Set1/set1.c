@@ -22,7 +22,7 @@ char base64_vals[64] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
                         'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
                         'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
                         's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
-                        '3', '4', '5', '6', '7', '8', '9', '+', '\\'};
+                        '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 
 
 
@@ -37,103 +37,6 @@ void errExit(char *message)
     fprintf(stderr, "[!] %s\n", message);
     exit(EXIT_FAILURE);
 }
-
-
-/*******************************************************************************
-* FUNCTIONS - LINKED LIST UTILITIES
-*******************************************************************************/
-
-LinkedList *ListInit(void)
-{
-    /*  Creates the data structure to manage the linked list
-
-        :INPUT is nothing
-
-        :RETURNS the LinkedList data structure
-    */
-
-    LinkedList *list = (LinkedList *) malloc(sizeof(LinkedList));
-    list->head = NULL;
-    list->tail = NULL;
-    list->current = NULL;
-    list->size = 0;
-
-    return list;
-}
-
-
-/******************************************************************************/
-void insert_node(LinkedList *list, void *item)
-{
-    /*  Inserts a data item into the list
-
-        :INPUT is a LinkedList already initialized, as well as the data item
-        the list will track, such as a Candidate struct (see set1.c)
-
-        :RETURNS nothing
-    */
-
-    Node *node = (Node *) malloc(sizeof(Node));     // create a node struct
-    node->data = item;      // point it at the Candidate struct
-
-    if (list->size == 0) {  // list is empty
-        node->next = NULL;
-        list->tail = node;
-    } else {    // node is not empty... insert at head
-        node->next = list->head;
-    }
-
-    list->head = node;
-    list->current = node;
-    list->size++;
-
-    return;
-}
-
-
-/******************************************************************************/
-void freeLinkedList(LinkedList *list)
-{
-    /*  Frees all members in the linked list to avoid memory leaks
-
-        :INPUT a LinkedList that was previously used.  This program assumes
-        the data element in the Node struct was a "Candidate" struct from
-        set1.h
-
-        :RETURNS nothing
-    */
-
-    Candidate *can;
-    Node *node;
-
-    //printf("LinkedList current size: %u\n", list->size);
-
-    list->current = list->head;     // point to head node
-    while (list->current != NULL) {   // iterate through list
-        node = list->current;
-        can = (Candidate *) node->data;
-
-        list->current = list->current->next;
-
-        free(can->plaintext);
-        free(can);
-        free(node);
-
-        list->size--;
-        //printf("LinkedList current size: %u\n", list->size);
-
-        can->plaintext = NULL;
-        can = NULL;
-        node = NULL;
-    }
-
-    free(list);
-    list = NULL;
-
-    //printf("LinkedList 100%% free!\n");
-    return;
-}
-
 
 
 
@@ -359,7 +262,7 @@ char *base64String_to_hexString(char *input)
         /* validate b1-b4.  If base64char_to_int returned -1 for b1-b4,
            then it's probably because it read the trailing '=' symbols.
            Make them 0 for now, then truncate the output string before return */
-        if (b1 == -1 || b2 == -1 || b3 == -1 || b4 == -1)
+        if (b1 == -1 || b2 == -1 || b3 == -1 || b4 == -1) {
             if (i >= INPUT_LEN)
                 b1 = 0;
             if (i + 1 >= INPUT_LEN)
@@ -368,6 +271,7 @@ char *base64String_to_hexString(char *input)
                 b3 = 0;
             if (i + 3 >= INPUT_LEN)
                 b4 = 0;
+        }
 
         /* convert from 6-bit base64 to 8-bit hex */
         h1 = (b1 << 2) + (b2 >> 4);
@@ -395,7 +299,7 @@ int base64char_to_int(char c)
 
        Returns -1 on error.
     */
-    int result;
+    int result = 0;
     switch(c) {
         case 'A'...'Z':
             result = ((int) c) - 65 + 0;
@@ -409,7 +313,7 @@ int base64char_to_int(char c)
         case '+':
             result = 62;
             break;
-        case '\\':
+        case '/':
             result = 63;
             break;
         default:
@@ -453,33 +357,7 @@ char *fixed_xor(char *buf1, char *buf2)
 
 
 /*****************************************************************************/
-Candidate *createCandidateStruct(char *input)
-{
-    /* Creates a Candidate struct and returns a pointer to it  */
-    Candidate *can = (Candidate *) malloc(sizeof(Candidate));
-    can->ciphertext = input;
-    can->plaintext = (char *) malloc(sizeof(char) * (strlen(input) / 2) + 1);
-    can->plain_length = 0;
-    can->score = 0.0;
-    return can;
-}
-
-/*****************************************************************************/
-void analyzeCandidate(Candidate *can)
-{
-    /*  Given a "Candidate" struct, it analyzes the plaintext determined from
-        XOR'ing the given ciphertext with a random byte value, assuming
-        single-XOR encryption.
-
-        Each score is calculated and stored in the Candidate struct's
-        can->score member.
-    */
-    can->score = scorePlaintext(can->plaintext);
-}
-
-
-/*****************************************************************************/
-int scorePlaintext(char *plaintext)
+int score_plaintext(char *plaintext)
 {
     /*  Given a plaintext string, it does a makeshift frequency analysis of the
         English language by adding a specified value to a 'score' variable
@@ -522,33 +400,6 @@ int scorePlaintext(char *plaintext)
 }
 
 
-
-/*****************************************************************************/
-char *findHighestScore(LinkedList *list)
-{
-    /* function that will return the candidate's plaintext with the highest
-       score.     */
-
-    double score = 0;
-    Candidate *tmp, *can;
-
-    list->current = list->head;
-    while (list->current != NULL) {
-        tmp = (Candidate *) list->current->data;
-
-        if (tmp->score > score) {
-            can = tmp;
-            score = can->score;
-            //printf("score: %f\n", score);
-        }
-
-        list->current = list->current->next;
-    }
-
-    char *result = (char *) can->plaintext;
-    return result;
-}
-
 /*****************************************************************************/
 char *singleXOR_iterate(char *input)
 {
@@ -566,43 +417,48 @@ char *singleXOR_iterate(char *input)
     int *INPUT_ARR = (int *) malloc(sizeof(int) * (INPUT_LEN / 2));
     int index = 0;
 
-    /* create an array of numerical representation of the input string */
+    /* create an array of numerical representations of the input string */
     for (int i = 0; i < INPUT_LEN; i += 2) {
         INPUT_ARR[index++] = getHexInt(input[i]) * 16 + getHexInt(input[i + 1]);
     }
 
-    LinkedList *list = ListInit();
 
     char byte;     /* xor string against this */
     int num;
+    int score, score_best = -1;  /* set score_best initially low */
+
+    /* two array strings to hold plaintext and find the best one */
+    char *plain = (char *) malloc(sizeof(char) * (strlen(input) / 2) + 1);
+    char *plain_best = (char *) malloc(sizeof(char) * (strlen(input) / 2) + 1);
 
     for (int i = 0; i < 256; i++) { /* iterate through 1-byte 0-255  */
         byte = (char) i;
-        Candidate *can = createCandidateStruct(input);  // set1.c
         index = 0;
 
         for (int j = 0; j < INPUT_LEN / 2; j++) { /* iterate through INPUT_ARR */
             num = INPUT_ARR[j];
             num ^= byte;
-            can->plaintext[index++] = (char) num;
+            plain[index++] = (char) num;
+        }
+        plain[index] = '\0';
+
+        score = score_plaintext(plain);
+
+        /* compare scores */
+        if (score > score_best) {
+            score_best = score;
+            strcpy(plain_best, plain);
         }
 
-        /* add Candidate to LinkedList (see linked_list.c) */
-        insert_node(list, (void *) can);
-
-        /* analyze plaintext and 'score' it */
-        analyzeCandidate(can);
     }
 
-    char *result = (char *) malloc(sizeof(char) * INPUT_LEN);
-    memset(result, '\0', INPUT_LEN);
-    strcpy(result, findHighestScore(list));
-
-    freeLinkedList(list);
+    /* reap resources and return */
     free(INPUT_ARR);
+    free(plain);
     INPUT_ARR = NULL;
+    plain = NULL;
 
-    return result;
+    return plain_best;
 }
 
 /*****************************************************************************/
@@ -714,6 +570,7 @@ int findKeySize(char *input)
         ham12 = hammingDist(block1, block2);
         ham34 = hammingDist(block3, block4);
         ham_avg = (double) (ham12 + ham34) / (2 * i);
+        //printf("[%d] -> %f\n", i, ham_avg);
 
         if (ham_avg < ham_min) {
             ham_min = ham_avg;
@@ -729,4 +586,63 @@ int findKeySize(char *input)
     block1 = block2 = block3 = block4 = NULL;
 
     return KEYSIZE;
+}
+
+/*****************************************************************************/
+void repeatedXOR_iterate(char *ciphertext, int keysize)
+{
+
+    /* how big are each block?  */
+    int cipherlen = strlen(ciphertext);
+    int remainder = cipherlen % keysize;
+    int blocklen = cipherlen / keysize;
+
+    /* for hex string, each two string digits equate to one plain char */
+    char *plaintext = (char *) malloc((sizeof(char) * cipherlen) / 2 + 1);
+    int index;
+
+    for (int i = 0; i < keysize; i++) {
+        index = 0;
+        char *block   = (char *) malloc(sizeof(char) * blocklen * 2 + 2 + 1);
+        char *partial = (char *) malloc(sizeof(char) * blocklen * 2 + 2 + 1);
+
+        /* break ciphertext into blocks stepping every keysize-num chars */
+        for (int j = 0; j < (2 * blocklen); j += 2) {
+            block[j]   = ciphertext[j / 2 * keysize + i];
+            block[j+1] = ciphertext[j / 2 * keysize + i + 1];
+        }
+
+        /* if cipherlen % keysize != 0, then add remaining chars */
+        if (remainder != 0 && i < remainder) {
+            block[2 * blocklen]     = ciphertext[blocklen * keysize + i];
+            block[2 * blocklen + 1] = ciphertext[blocklen * keysize + i + 1];
+        } else {
+            block[2 * blocklen]     = '\0';
+            block[2 * blocklen + 1] = '\0';
+        }
+
+        /* null-terminate the block */
+        block[2 * blocklen + 2] = '\0';
+        //printf("block[%d] = %s\n", i, block);
+
+        /* call singleXOR_iterate on each block */
+        partial = singleXOR_iterate(block);
+
+        /* place each char of 'partial' back into plaintext at keysize steps */
+        for (int k = 0; k < strlen(partial); k++) {
+            plaintext[index + i] = partial[k];
+            index += keysize;
+            if (index > cipherlen)
+                index = cipherlen;
+        }
+
+        /* reap block resources */
+        free(block);
+        free(partial);
+        block = partial = NULL;
+    }
+
+    printf("%s\n", plaintext);
+    free(plaintext);
+    plaintext = NULL;
 }

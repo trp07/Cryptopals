@@ -16,33 +16,6 @@ See also:
 
 
 /*******************************************************************************
-* DATA STRUCTURES
-*******************************************************************************/
-
-/* struct to store information about plaintext to score it */
-typedef struct _candidate {
-    char    *ciphertext;
-    char    *plaintext;
-    unsigned long     plain_length;
-    double  score;
-} Candidate;
-
-/* nodes for a linked list */
-typedef struct _node {
-    void    *data;
-    struct _node   *next;
-} Node;
-
-/* singly linked list */
-typedef struct _list {
-    Node    *head;
-    Node    *tail;
-    Node    *current;
-    unsigned int size;
-} LinkedList;
-
-
-/*******************************************************************************
 * FUNCTIONS
 *   listed in order as they appear in set1.c
 *******************************************************************************/
@@ -50,10 +23,6 @@ typedef struct _list {
 /* General Utilities */
 void errExit(char *message);
 
-/* Linked-List functions */
-LinkedList *ListInit(void);
-void insert_node(LinkedList *list, void *item);
-void freeLinkedList(LinkedList *list);
 
 /* Cryptography functions */
 int getHexInt(char c);
@@ -63,14 +32,12 @@ char *hexString_to_base64String(char *input);
 char *base64String_to_hexString(char *input);
 int base64char_to_int(char c);
 char *fixed_xor(char *buf1, char *buf2);
-Candidate *createCandidateStruct(char *input);
-void analyzeCandidate(Candidate *can);
-int scorePlaintext(char *plaintext);
-char *findHighestScore(LinkedList *list);
+int score_plaintext(char *plaintext);
 char *singleXOR_iterate(char *input);
 char *encryptXor(char *plaintext, char *key);
 int hammingDist(char *str1, char *str2);
 int findKeySize(char *input);
+void repeatedXOR_iterate(char *ciphertext, int keysize);
 
 
 

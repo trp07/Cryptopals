@@ -42,7 +42,7 @@ int main(void)
 
         current = singleXOR_iterate(line);
 
-        score = scorePlaintext(current);
+        score = score_plaintext(current);
         if (score > best_score) {
             best_score = score;
             strcpy(winner, current);
